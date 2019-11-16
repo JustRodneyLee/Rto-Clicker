@@ -8,9 +8,10 @@
     Private WithEvents kbHook As New KeyboardHook
 
     Dim lastNum, num As Integer
-    Dim lastFreq, freq As Integer
+    Dim lastFreq, freq As Decimal
     Dim clicking, infinite, p2pause As Boolean
     Dim mRight As Boolean
+    Dim countDown As Integer
 
     Enum MouseAction
         Click
@@ -36,6 +37,7 @@
 
     Private Sub startButton_Click(sender As Object, e As EventArgs) Handles startButtonLeft.Click
         If clicking = False Then
+            countDown = 0
             clicking = True
             mRight = False
             DisableControls()
@@ -61,11 +63,11 @@
                 Call apimouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
             Else
                 Call apimouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                Call apimouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
             End If
         Else
             If mRight Then
                 Call apimouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
-                Call apimouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
             Else
                 Call apimouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
             End If
@@ -74,6 +76,7 @@
 
     Sub Initialize()
         Timer.Stop()
+        countDown = 0
         clicking = False
         num = lastNum
         TextBoxNum.Text = num.ToString()
@@ -83,6 +86,7 @@
         startButtonLeft.Enabled = True
         startButtonRight.Text = "Start Auto-Clicking! (Right)"
         startButtonRight.Enabled = True
+        Me.Text = "Rto Clicker"
     End Sub
 
     Sub InitiateClicking()
@@ -93,6 +97,7 @@
         startButtonRight.Text = "Stop Auto-Clicking!"
         TextBoxNum.Enabled = False
         TextBoxFreq.Enabled = False
+        Me.Text = "Rto Clicker - Auto-Clicking..."
         Timer.Start()
         Timer_Prep.Stop()
     End Sub
@@ -111,20 +116,6 @@
         End If
     End Sub
 
-    Private Sub TextBoxFreq_TextChanged(sender As Object, e As EventArgs) Handles TextBoxFreq.TextChanged
-        If IsNumeric(TextBoxFreq.Text) Then
-            If freq <= 1000 Then
-                freq = Convert.ToInt16(TextBoxFreq.Text)
-                lastFreq = freq
-                Timer.Interval = 1000 \ freq
-            Else
-                MessageBox.Show("Frequency cannot be larger than 1000!")
-            End If
-        Else
-            TextBoxFreq.Text = lastFreq.ToString()
-        End If
-    End Sub
-
     Private Sub CheckBox_Inf_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_Inf.CheckedChanged
         If CheckBox_Inf.Checked Then
             infinite = True
@@ -139,6 +130,7 @@
 
     Private Sub startButtonRight_Click(sender As Object, e As EventArgs) Handles startButtonRight.Click
         If clicking = False Then
+            countDown = 0
             clicking = True
             mRight = True
             DisableControls()
@@ -158,6 +150,37 @@
         End If
     End Sub
 
+    Private Sub TextBoxFreq_Leave(sender As Object, e As EventArgs) Handles TextBoxFreq.Leave
+        If IsNumeric(TextBoxFreq.Text) Then
+            freq = Convert.ToDecimal(TextBoxFreq.Text)
+            'MsgBox(freq)
+            If freq <= 1000 Then
+                If freq > 0 Then
+                    lastFreq = freq
+                    Timer.Interval = Convert.ToInt16(1000 / freq)
+                Else
+                    freq = -1
+                End If
+            Else
+                MsgBox("Frequency cannot be larger than 1000!", MsgBoxStyle.OkOnly, "Rto Clicker - Error")
+                TextBoxFreq.Text = lastFreq.ToString()
+            End If
+        Else
+            TextBoxFreq.Text = lastFreq.ToString()
+            TextBoxFreq.Select()
+        End If
+        If freq = -1 Then
+            MsgBox("Invalid Frequency Input!", MsgBoxStyle.OkOnly, "Rto Clicker - Error")
+            freq = lastFreq
+            TextBoxFreq.Text = lastFreq.ToString()
+            TextBoxFreq.Select()
+        End If
+    End Sub
+
+    Private Sub RC_Click(sender As Object, e As EventArgs) Handles MyBase.Click
+        LabelFocus.Select()
+    End Sub
+
     Private Sub CheckBox_P_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_P.CheckedChanged
         If CheckBox_P.Checked Then
             p2pause = True
@@ -170,7 +193,13 @@
         If infinite = False Then
             If IsNumeric(TextBoxNum.Text) Then
                 num = Convert.ToInt16(TextBoxNum.Text)
-                lastNum = num
+                If num <= 0 Then
+                    MsgBox("Invalid Number of Clicks!", MsgBoxStyle.OkOnly, "Rto Clicker - Error")
+                    num = lastNum
+                    TextBoxNum.Text = lastNum.ToString()
+                Else
+                    lastNum = num
+                End If
             Else
                 TextBoxNum.Text = lastNum.ToString()
             End If
@@ -178,7 +207,13 @@
     End Sub
 
     Private Sub Timer_Prep_Tick(sender As Object, e As EventArgs) Handles Timer_Prep.Tick
-        InitiateClicking()
+        If countDown = 3 Then
+            InitiateClicking()
+            Me.Text = "Rto Clicker - Auto-Clicking..."
+        Else
+            countDown += 1
+            Me.Text = "Rto Clicker - Clicking in " + (3 - countDown).ToString() + "s..."
+        End If
     End Sub
 
     Private Sub kbHook_KeyDown(ByVal Key As System.Windows.Forms.Keys) Handles kbHook.KeyDown
@@ -188,6 +223,13 @@
                     If Timer.Enabled Then
                         Timer.Stop()
                         TextBoxFreq.Enabled = True
+                        If mRight Then
+                            startButtonRight.Text = "Continue Auto-Clicking! (Right)"
+                            startButtonRight.Enabled = True
+                        Else
+                            startButtonLeft.Text = "Continue Auto-Clicking! (Left)"
+                            startButtonLeft.Enabled = True
+                        End If
                     Else
                         InitiateClicking()
                     End If

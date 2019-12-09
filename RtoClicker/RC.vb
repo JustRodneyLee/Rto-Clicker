@@ -1,4 +1,6 @@
-﻿Public Class RC
+﻿Imports System.Runtime.InteropServices
+
+Public Class RC
 
     Public Const MOUSEEVENTF_LEFTDOWN = &H2
     Public Const MOUSEEVENTF_LEFTUP = &H4
@@ -12,6 +14,9 @@
     Dim clicking, infinite, p2pause As Boolean
     Dim mRight As Boolean
     Dim countDown As Integer
+    Dim mb As Boolean
+    Dim Bmp As New Bitmap(1, 1)
+    Dim G As Graphics = Graphics.FromImage(Bmp)
 
     Enum MouseAction
         Click
@@ -103,15 +108,22 @@
     End Sub
 
     Private Sub Timer_Tick(sender As Object, e As EventArgs) Handles Timer.Tick
-        If num = 0 Then
-            Initialize()
+        If mb Then
+            G.CopyFromScreen(Cursor.Position, Point.Empty, Bmp.Size)
+            If Bmp.GetPixel(0, 0) = Color.FromArgb(75, 219, 106) Then
+                MClick()
+            End If
         Else
-            MClick()
-            If infinite Then
-                TextBoxNum.Text = "∞"
+            If num = 0 Then
+                Initialize()
             Else
-                num -= 1
-                TextBoxNum.Text = num.ToString()
+                MClick()
+                If infinite Then
+                    TextBoxNum.Text = "∞"
+                Else
+                    num -= 1
+                    TextBoxNum.Text = num.ToString()
+                End If
             End If
         End If
     End Sub
@@ -179,6 +191,18 @@
 
     Private Sub RC_Click(sender As Object, e As EventArgs) Handles MyBase.Click
         LabelFocus.Select()
+    End Sub
+
+    Private Sub Button_MB_Click(sender As Object, e As EventArgs) Handles Button_MB.Click
+        If mb = True Then
+            mb = False
+            Timer.Stop()
+        Else
+            mRight = False
+            Timer.Interval = 1
+            mb = True
+            Timer.Start()
+        End If
     End Sub
 
     Private Sub CheckBox_P_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_P.CheckedChanged

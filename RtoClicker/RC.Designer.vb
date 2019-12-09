@@ -36,6 +36,7 @@ Partial Class RC
         Me.CheckBox_Hold = New System.Windows.Forms.CheckBox()
         Me.CheckBox_P = New System.Windows.Forms.CheckBox()
         Me.LabelFocus = New System.Windows.Forms.Label()
+        Me.Button_MB = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'startButtonLeft
@@ -144,11 +145,22 @@ Partial Class RC
         Me.LabelFocus.Size = New System.Drawing.Size(0, 12)
         Me.LabelFocus.TabIndex = 9
         '
+        'Button_MB
+        '
+        Me.Button_MB.Location = New System.Drawing.Point(144, 9)
+        Me.Button_MB.Name = "Button_MB"
+        Me.Button_MB.Size = New System.Drawing.Size(75, 15)
+        Me.Button_MB.TabIndex = 10
+        Me.Button_MB.Text = "Machine Benchmark"
+        Me.Button_MB.UseVisualStyleBackColor = True
+        Me.Button_MB.Visible = False
+        '
         'RC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(240, 172)
+        Me.Controls.Add(Me.Button_MB)
         Me.Controls.Add(Me.LabelFocus)
         Me.Controls.Add(Me.CheckBox_P)
         Me.Controls.Add(Me.CheckBox_Hold)
@@ -180,4 +192,5 @@ Partial Class RC
     Friend WithEvents CheckBox_Hold As CheckBox
     Friend WithEvents CheckBox_P As CheckBox
     Friend WithEvents LabelFocus As Label
+    Friend WithEvents Button_MB As Button
 End Class

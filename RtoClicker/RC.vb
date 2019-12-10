@@ -14,7 +14,6 @@ Public Class RC
     Dim clicking, infinite, p2pause As Boolean
     Dim mRight As Boolean
     Dim countDown As Integer
-    Dim mb As Boolean
     Dim Bmp As New Bitmap(1, 1)
     Dim G As Graphics = Graphics.FromImage(Bmp)
 
@@ -81,6 +80,8 @@ Public Class RC
 
     Sub Initialize()
         Timer.Stop()
+        Timer_MB.Stop()
+        Timer_MB2.Stop()
         countDown = 0
         clicking = False
         num = lastNum
@@ -91,6 +92,12 @@ Public Class RC
         startButtonLeft.Enabled = True
         startButtonRight.Text = "Start Auto-Clicking! (Right)"
         startButtonRight.Enabled = True
+        Button_MB.Text = "Reaction Test"
+        Button_MB2.Text = "Visual Memory Test"
+        GroupBox_AC.Enabled = True
+        Button_MB.Enabled = True
+        Button_MB2.Enabled = True
+        GroupBox_MB.Enabled = True
         Me.Text = "Rto Clicker"
     End Sub
 
@@ -102,28 +109,22 @@ Public Class RC
         startButtonRight.Text = "Stop Auto-Clicking!"
         TextBoxNum.Enabled = False
         TextBoxFreq.Enabled = False
+        GroupBox_MB.Enabled = False
         Me.Text = "Rto Clicker - Auto-Clicking..."
         Timer.Start()
         Timer_Prep.Stop()
     End Sub
 
     Private Sub Timer_Tick(sender As Object, e As EventArgs) Handles Timer.Tick
-        If mb Then
-            G.CopyFromScreen(Cursor.Position, Point.Empty, Bmp.Size)
-            If Bmp.GetPixel(0, 0) = Color.FromArgb(75, 219, 106) Then
-                MClick()
-            End If
+        If num = 0 Then
+            Initialize()
         Else
-            If num = 0 Then
-                Initialize()
+            MClick()
+            If infinite Then
+                TextBoxNum.Text = "∞"
             Else
-                MClick()
-                If infinite Then
-                    TextBoxNum.Text = "∞"
-                Else
-                    num -= 1
-                    TextBoxNum.Text = num.ToString()
-                End If
+                num -= 1
+                TextBoxNum.Text = num.ToString()
             End If
         End If
     End Sub
@@ -194,15 +195,42 @@ Public Class RC
     End Sub
 
     Private Sub Button_MB_Click(sender As Object, e As EventArgs) Handles Button_MB.Click
-        If mb = True Then
-            mb = False
-            Timer.Stop()
+        If Timer_MB.Enabled Then
+            Initialize()
         Else
-            mRight = False
-            Timer.Interval = 1
-            mb = True
-            Timer.Start()
+            GroupBox_AC.Enabled = False
+            Button_MB2.Enabled = False
+            Me.Text = "Rto Clicker - Human Benchmark Reaction Test"
+            MsgBox("Follow this link for magic to happen: https://humanbenchmark.com/tests/reactiontime.")
+            MsgBox("Please keep your webpage at the front and position your pointer on the area to be clicked.")
+            Button_MB.Text = "Stop Test"
+            Timer_MB.Start()
         End If
+    End Sub
+
+    Private Sub Button_MB2_Click(sender As Object, e As EventArgs) Handles Button_MB2.Click
+        If Timer_MB2.Enabled Then
+            Initialize()
+        Else
+            GroupBox_AC.Enabled = False
+            Button_MB.Enabled = False
+            MsgBox("Follow this link for magic to happen: https://humanbenchmark.com/tests/memory.")
+            MsgBox("Please keep your webpage at the front.")
+            Button_MB2.Text = "Stop Test"
+            Me.Text = "Rto Clicker - Human Benchmark Visual Memory Test"
+            Timer_MB2.Start()
+        End If
+    End Sub
+
+    Private Sub Timer_MB_Tick(sender As Object, e As EventArgs) Handles Timer_MB.Tick
+        G.CopyFromScreen(Cursor.Position, Point.Empty, Bmp.Size)
+        If Bmp.GetPixel(0, 0) = Color.FromArgb(75, 219, 106) Then
+            MClick()
+        End If
+    End Sub
+
+    Private Sub Timer_MB2_Tick(sender As Object, e As EventArgs) Handles Timer_MB2.Tick
+        G.CopyFromScreen(Cursor.Position, Point.Empty, Bmp.Size)
     End Sub
 
     Private Sub CheckBox_P_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_P.CheckedChanged

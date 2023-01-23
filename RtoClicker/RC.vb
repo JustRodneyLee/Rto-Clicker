@@ -11,7 +11,7 @@ Public Class RC
 
     Dim lastNum, num As Integer
     Dim lastFreq, freq As Decimal
-    Dim clicking, infinite, p2pause As Boolean
+    Dim clicking, infinite As Boolean
     Dim mRight As Boolean
     Dim countDown As Integer
     Dim Bmp As New Bitmap(1, 1)
@@ -35,7 +35,6 @@ Public Class RC
         mRight = False
         ma = MouseAction.Click
         infinite = False
-        p2pause = True
         Initialize()
     End Sub
 
@@ -53,9 +52,9 @@ Public Class RC
 
     Sub DisableControls()
         startButtonRight.Enabled = False
-        startButtonRight.Text = "Initiating in 3 seconds..."
+        startButtonRight.Text = "Initiating in 3s..."
         startButtonLeft.Enabled = False
-        startButtonLeft.Text = "Initiating in 3 seconds..."
+        startButtonLeft.Text = "Initiating in 3s..."
         CheckBox_Hold.Enabled = False
         CheckBox_Inf.Enabled = False
     End Sub
@@ -86,31 +85,39 @@ Public Class RC
         clicking = False
         num = lastNum
         TextBoxNum.Text = num.ToString()
-        TextBoxNum.Enabled = True
-        TextBoxFreq.Enabled = True
-        startButtonLeft.Text = "Start Auto-Clicking! (Left)"
+        startButtonLeft.Text = "Start Auto-Clicking (Left)"
         startButtonLeft.Enabled = True
-        startButtonRight.Text = "Start Auto-Clicking! (Right)"
+        startButtonRight.Text = "Start Auto-Clicking (Right)"
         startButtonRight.Enabled = True
         Button_MB.Text = "Reaction Test"
-        Button_MB2.Text = "Visual Memory Test"
         GroupBox_AC.Enabled = True
         Button_MB.Enabled = True
-        Button_MB2.Enabled = True
         GroupBox_MB.Enabled = True
-        Me.Text = "Rto Clicker"
+        CheckBox_Hold.Enabled = True
+        CheckBox_Inf.Enabled = True
+        If CheckBox_Inf.Checked Then
+            TextBoxNum.Enabled = False
+        Else
+            TextBoxNum.Enabled = True
+        End If
+        If CheckBox_Hold.Checked Then
+            TextBoxFreq.Enabled = False
+        Else
+            TextBoxFreq.Enabled = True
+        End If
+        Text = "Rto Clicker"
     End Sub
 
     Sub InitiateClicking()
         clicking = True
         startButtonLeft.Enabled = True
-        startButtonLeft.Text = "Stop Auto-Clicking!"
+        startButtonLeft.Text = "Press P to Pause"
         startButtonRight.Enabled = True
-        startButtonRight.Text = "Stop Auto-Clicking!"
+        startButtonRight.Text = "Press P to Pause"
         TextBoxNum.Enabled = False
         TextBoxFreq.Enabled = False
         GroupBox_MB.Enabled = False
-        Me.Text = "Rto Clicker - Auto-Clicking..."
+        Text = "Rto Clicker - Auto-Clicking..."
         Timer.Start()
         Timer_Prep.Stop()
     End Sub
@@ -120,9 +127,7 @@ Public Class RC
             Initialize()
         Else
             MClick()
-            If infinite Then
-                TextBoxNum.Text = "∞"
-            Else
+            If Not infinite Then
                 num -= 1
                 TextBoxNum.Text = num.ToString()
             End If
@@ -132,12 +137,12 @@ Public Class RC
     Private Sub CheckBox_Inf_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_Inf.CheckedChanged
         If CheckBox_Inf.Checked Then
             infinite = True
-            CheckBox_P.Checked = True
-            p2pause = True
             TextBoxNum.Enabled = False
+            TextBoxNum.Text = "∞"
         Else
             infinite = False
             TextBoxNum.Enabled = True
+            TextBoxNum.Text = ToString(lastNum)
         End If
     End Sub
 
@@ -156,17 +161,23 @@ Public Class RC
     Private Sub CheckBox_Hold_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_Hold.CheckedChanged
         If CheckBox_Hold.Checked = True Then
             ma = MouseAction.Hold
-            startButtonLeft.Text = "Stop Auto-Clicking!"
+            freq = 1
+            TextBoxFreq.Enabled = False
+            TextBoxNum.Enabled = False
         Else
             ma = MouseAction.Click
-            startButtonLeft.Text = "Stop Auto-Clicking!"
+            freq = lastFreq
+            TextBoxFreq.Enabled = True
+            If Not infinite Then
+                TextBoxNum.Enabled = True
+            End If
+            LabelNoClicks.Text = "Time to Hold(s)"
         End If
     End Sub
 
     Private Sub TextBoxFreq_Leave(sender As Object, e As EventArgs) Handles TextBoxFreq.Leave
         If IsNumeric(TextBoxFreq.Text) Then
             freq = Convert.ToDecimal(TextBoxFreq.Text)
-            'MsgBox(freq)
             If freq <= 1000 Then
                 If freq > 0 Then
                     lastFreq = freq
@@ -199,7 +210,6 @@ Public Class RC
             Initialize()
         Else
             GroupBox_AC.Enabled = False
-            Button_MB2.Enabled = False
             Me.Text = "Rto Clicker - Human Benchmark Reaction Test"
             MsgBox("Follow this link for magic to happen: https://humanbenchmark.com/tests/reactiontime.")
             MsgBox("Please keep your webpage at the front and position your pointer on the area to be clicked.")
@@ -208,7 +218,7 @@ Public Class RC
         End If
     End Sub
 
-    Private Sub Button_MB2_Click(sender As Object, e As EventArgs) Handles Button_MB2.Click
+    Private Sub Button_MB2_Click(sender As Object, e As EventArgs)
         If Timer_MB2.Enabled Then
             Initialize()
         Else
@@ -216,7 +226,6 @@ Public Class RC
             Button_MB.Enabled = False
             MsgBox("Follow this link for magic to happen: https://humanbenchmark.com/tests/memory.")
             MsgBox("Please keep your webpage at the front.")
-            Button_MB2.Text = "Stop Test"
             Me.Text = "Rto Clicker - Human Benchmark Visual Memory Test"
             Timer_MB2.Start()
         End If
@@ -231,14 +240,6 @@ Public Class RC
 
     Private Sub Timer_MB2_Tick(sender As Object, e As EventArgs) Handles Timer_MB2.Tick
         G.CopyFromScreen(Cursor.Position, Point.Empty, Bmp.Size)
-    End Sub
-
-    Private Sub CheckBox_P_CheckedChanged(sender As Object, e As EventArgs) Handles CheckBox_P.CheckedChanged
-        If CheckBox_P.Checked Then
-            p2pause = True
-        Else
-            p2pause = False
-        End If
     End Sub
 
     Private Sub TextBoxNum_TextChanged(sender As Object, e As EventArgs) Handles TextBoxNum.TextChanged
@@ -259,35 +260,31 @@ Public Class RC
     End Sub
 
     Private Sub Timer_Prep_Tick(sender As Object, e As EventArgs) Handles Timer_Prep.Tick
-        If countDown = 3 Then
+        If countDown = 2 Then
             InitiateClicking()
             Me.Text = "Rto Clicker - Auto-Clicking..."
         Else
             countDown += 1
             Me.Text = "Rto Clicker - Clicking in " + (3 - countDown).ToString() + "s..."
+            startButtonLeft.Text = "Initiating in " + (3 - countDown).ToString() + "s..."
+            startButtonRight.Text = "Initiating in " + (3 - countDown).ToString() + "s..."
         End If
     End Sub
 
     Private Sub kbHook_KeyDown(ByVal Key As System.Windows.Forms.Keys) Handles kbHook.KeyDown
-        If Key.ToString() = "P" Then
-            If p2pause Then
-                If infinite Then
-                    If Timer.Enabled Then
-                        Timer.Stop()
-                        TextBoxFreq.Enabled = True
-                        If mRight Then
-                            startButtonRight.Text = "Continue Auto-Clicking! (Right)"
-                            startButtonRight.Enabled = True
-                        Else
-                            startButtonLeft.Text = "Continue Auto-Clicking! (Left)"
-                            startButtonLeft.Enabled = True
-                        End If
-                    Else
-                        InitiateClicking()
-                    End If
-                Else
-                    Initialize()
+        If Key.ToString() = "P" Or Key.ToString() = "p" Then
+            If Timer.Enabled Then
+                Timer.Stop()
+                If ma = MouseAction.Click Then
+                    TextBoxFreq.Enabled = True
                 End If
+                If Not infinite Then
+                    TextBoxNum.Enabled = True
+                End If
+                startButtonRight.Text = "Press to Stop"
+                startButtonLeft.Text = "Press to Stop"
+            Else
+                InitiateClicking()
             End If
         End If
     End Sub
